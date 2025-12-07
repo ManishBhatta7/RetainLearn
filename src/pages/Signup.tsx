@@ -63,7 +63,7 @@ const Signup = () => {
           // Success toast with better styling
           toast({
             title: "🎉 Account created successfully!",
-            description: `Welcome to RetainLearn, ${data.name}! Redirecting to your dashboard...`,
+            description: `Welcome to AdaptiveEdCoach, ${data.name}! Redirecting to your dashboard...`,
             duration: 3000,
           });
           
@@ -139,7 +139,7 @@ const Signup = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Book className="h-8 w-8 text-edu-primary" />
-            <span className="text-2xl font-bold">RetainLearn</span>
+            <span className="text-2xl font-bold">AdaptiveEdCoach</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Get started today</h1>
           <p className="text-gray-600 mt-2">Create your account and begin your learning journey</p>

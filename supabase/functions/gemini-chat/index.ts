@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,104 +6,98 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const MODEL_NAME = 'gemini-2.0-flash-lite';
-const API_VERSION = 'v1beta';
-
 serve(async (req) => {
-  // 1. Handle CORS Preflight
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // 2. Validate Method
-    if (req.method !== 'POST') {
-      throw new Error(`Method ${req.method} not allowed`);
+    const { prompt, systemPrompt = "You are a helpful AI assistant." } = await req.json();
+
+    if (!prompt) {
+      return new Response(
+        JSON.stringify({ error: 'Prompt is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    // 3. Parse Body
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      throw new Error('Invalid JSON body');
-    }
-
-    // 4. Handle different input formats (Fixes the crash)
-    const { prompt, messages, systemPrompt } = body;
-    let geminiContents = [];
-
-    // Scenario A: Client sends a "messages" array (Chat History)
-    if (messages && Array.isArray(messages)) {
-      geminiContents = messages.map((msg: any) => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-      }));
-    } 
-    // Scenario B: Client sends a single "prompt" string
-    else if (prompt) {
-      geminiContents = [{
-        role: 'user',
-        parts: [{ text: prompt }]
-      }];
-    } else {
-      throw new Error('Missing input: Payload must contain "messages" array or "prompt" string.');
-    }
-
-    // 5. API Key Check
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    
     if (!geminiApiKey) {
-      throw new Error('Server configuration error: GEMINI_API_KEY is missing');
+      throw new Error('Gemini API key not found in environment variables');
     }
 
-    // 6. Call Gemini API
-    const finalSystemPrompt = systemPrompt || "You are a helpful AI assistant.";
+    // Prepare the conversation with system prompt and user prompt
+    const contents = [
+      {
+        parts: [{
+          text: `${systemPrompt}\n\nUser: ${prompt}`
+        }]
+      }
+    ];
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/${API_VERSION}/models/${MODEL_NAME}:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
-        contents: geminiContents,
-        systemInstruction: {
-          parts: [{ text: finalSystemPrompt }]
-        },
+        contents,
         generationConfig: {
           temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
           maxOutputTokens: 2048,
-        }
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
       })
     });
 
-    // 7. Handle API Errors
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Gemini API Error (${response.status}):`, errorText);
-      throw new Error(`Gemini Provider Error: ${response.statusText} - ${errorText}`);
+      const error = await response.json();
+      console.error('Gemini API error:', error);
+      throw new Error(`Gemini API error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!generatedText) {
-      console.error('Gemini returned no text:', JSON.stringify(data));
-      throw new Error('AI returned no content.');
+    
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('No response generated from Gemini');
     }
 
-    // 8. Return Success (Compatible with your Client)
+    const generatedText = data.candidates[0].content.parts[0].text;
+
     return new Response(JSON.stringify({
       success: true,
-      response: generatedText, // AITutorService likely looks for this
-      reply: generatedText,    // AITutorSystem looks for this (dual support)
+      response: generatedText,
       usage: data.usageMetadata || null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-  } catch (error: any) {
-    console.error('Function Error:', error.message);
+  } catch (error) {
+    console.error('Error in gemini-chat function:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message || 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

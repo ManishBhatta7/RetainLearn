@@ -32,7 +32,7 @@ const Contact = () => {
       <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <Link to="/" className="flex items-center gap-2">
           <GraduationCap className="h-8 w-8 text-purple-600" />
-          <span className="text-2xl font-bold text-purple-900">RetainLearn</span>
+          <span className="text-2xl font-bold text-purple-900">Adaptive Ed Coach</span>
         </Link>
         <Link to="/">
           <Button variant="ghost">
@@ -64,7 +64,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
-                    <p className="text-sm text-gray-600">support@retainlearn.com</p>
+                    <p className="text-sm text-gray-600">support@adaptiveedcoach.com</p>
                   </div>
                 </div>
               </CardContent>

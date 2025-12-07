@@ -14,21 +14,7 @@ export default defineConfig({
     },
   },
   build: {
-    target: "esnext",
-    // FIX: Add Rollup options to split heavy libraries into separate chunks
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-slot', 'lucide-react', 'framer-motion', 'clsx', 'tailwind-merge'],
-          'charts': ['recharts'], // Heavy library, keep separate
-          'supabase': ['@supabase/supabase-js'],
-          'utils': ['date-fns', 'zod'] // Common utilities
-        }
-      }
-    },
-    // FIX: Increase chunk size warning limit (default is 500kb)
-    chunkSizeWarningLimit: 1000,
+    target: "esnext", // Required for modern web features
   },
   optimizeDeps: {
     esbuildOptions: {
