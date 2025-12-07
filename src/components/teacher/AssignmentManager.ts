@@ -29,8 +29,7 @@ const AssignmentManager = () => {
   const [description, setDescription] = useState('');
   const [qPaper, setQPaper] = useState<File | null>(null);
   const [markScheme, setMarkScheme] = useState<File | null>(null);
-  // Typed as string literal to match the allowed values
-  const [gradingCalibration, setGradingCalibration] = useState<'Strict' | 'Balanced' | 'Growth-Oriented'>('Balanced');
+  const [gradingCalibration, setGradingCalibration] = useState(currentUser?.gradingStyle || 'Balanced');
 
   useEffect(() => {
     loadAssignments();
