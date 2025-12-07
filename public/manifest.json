@@ -1,6 +1,6 @@
 {
-  "name": "RetainLearn",
-  "short_name": "RetainLearn",
+  "name": "Adaptive Education Coach",
+  "short_name": "EduCoach",
   "description": "AI-powered metacognitive learning platform for students",
   "start_url": "/",
   "display": "standalone",

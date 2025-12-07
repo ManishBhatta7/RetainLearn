@@ -24,7 +24,7 @@ const Header = () => {
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2">
             <Book className="h-6 w-6 text-edu-primary" />
-            <span className="text-xl font-bold">RetainLearn</span>
+            <span className="text-xl font-bold">AdaptiveEdCoach</span>
           </Link>
         </div>
 
@@ -32,9 +32,6 @@ const Header = () => {
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/dashboard" className="text-sm font-medium hover:text-edu-primary transition-colors">
             Dashboard
-          </Link>
-          <Link to="/ai-tutor" className="text-sm font-medium hover:text-edu-primary transition-colors">
-            AI Tutor
           </Link>
           <Link to="/learning-style" className="text-sm font-medium hover:text-edu-primary transition-colors">
             Learning Style
@@ -157,13 +154,6 @@ const Header = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             Dashboard
-          </Link>
-          <Link 
-            to="/ai-tutor" 
-            className="block py-2 text-sm font-medium hover:text-edu-primary transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            AI Tutor
           </Link>
           <Link 
             to="/learning-style" 

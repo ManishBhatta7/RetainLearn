@@ -17,10 +17,10 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const AITutorPage = lazy(() => import("./pages/AITutorPage"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const LearningStylePage = lazy(() => import("./pages/LearningStylePage"));
 const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
+const ProgressPage = lazy(() => import("./pages/ProgressPage"));
 const VoiceReadingPage = lazy(() => import("./pages/VoiceReadingPage"));
 const ReportUploadPage = lazy(() => import("./pages/ReportUploadPage"));
 const EssayCheckerPage = lazy(() => import("./pages/EssayCheckerPage"));
@@ -81,11 +81,6 @@ const App = () => (
                       <Dashboard />
                     </ProtectedRoute>
                   } />
-                  <Route path="/ai-tutor" element={
-                    <ProtectedRoute>
-                      <AITutorPage />
-                    </ProtectedRoute>
-                  } />
                   <Route path="/teacher-dashboard" element={
                     <ProtectedRoute requiredRole="teacher">
                       <TeacherDashboard />
@@ -99,6 +94,11 @@ const App = () => (
                   <Route path="/submit" element={
                     <ProtectedRoute>
                       <SubmitAssignment />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/progress" element={
+                    <ProtectedRoute>
+                      <ProgressPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/reading" element={

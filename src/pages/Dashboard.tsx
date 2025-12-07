@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, memo } from 'react'; // FIX: Import useMemo and memo
-import { useNavigate } from 'react-router-dom';
+
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
@@ -17,30 +17,20 @@ import GamificationService, { Achievement } from '@/services/GamificationService
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap, Bot } from 'lucide-react';
+import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
 
-// FIX: Memoize heavy components
-const MemoizedProgressChart = memo(ProgressChart);
-const MemoizedInsights = memo(PersonalizedInsights);
-const MemoizedXPBar = memo(XPProgressBar);
-
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { state } = useAppContext();
-  const { isLoading, currentUser } = state; // Destructure explicitly
+  const { isLoading } = state;
   const { toast } = useToast();
 
   // Gamification state (mock data - replace with real data from database)
   const [totalXP, setTotalXP] = useState(250); // Mock XP
   const [achievementToShow, setAchievementToShow] = useState<Achievement | null>(null);
   
-  // FIX 1: Memoize expensive logic
-  const level = useMemo(() => {
-    return GamificationService.calculateLevel(totalXP);
-  }, [totalXP]);
-
+  const level = GamificationService.calculateLevel(totalXP);
   const streak = {
     current: 3,
     longest: 5,
@@ -49,9 +39,9 @@ const Dashboard = () => {
   };
 
   const [dailyGoals, setDailyGoals] = useState([
-    { id: '1', title: 'Submit 1 assignment', description: 'Complete and submit your work', completed: false, xpReward: 50, icon: '統' },
-    { id: '2', title: 'Complete learning quiz', description: 'Test your knowledge', completed: false, xpReward: 40, icon: '答' },
-    { id: '3', title: 'Study for 30 minutes', description: 'Consistent daily practice', completed: false, xpReward: 30, icon: '竢ｰ' },
+    { id: '1', title: 'Submit 1 assignment', description: 'Complete and submit your work', completed: false, xpReward: 50, icon: '📝' },
+    { id: '2', title: 'Complete learning quiz', description: 'Test your knowledge', completed: false, xpReward: 40, icon: '📚' },
+    { id: '3', title: 'Study for 30 minutes', description: 'Consistent daily practice', completed: false, xpReward: 30, icon: '⏰' },
   ]);
 
   const handleGoalComplete = (goalId: string) => {
@@ -75,26 +65,6 @@ const Dashboard = () => {
       }
     }
   };
-  
-  // FIX 2: Memoize specific derived data from currentUser
-  const recentPerformances = useMemo(() => {
-    return currentUser?.performances || [];
-  }, [currentUser?.performances]);
-
-  // FIX 3: Calculate stats only when performances change
-  const stats = useMemo(() => {
-    const perfs = currentUser?.performances || [];
-    const total = perfs.length;
-    
-    const last10 = perfs.slice(-10).filter(p => p.score !== undefined);
-    const avgScore = last10.length 
-      ? Math.round(last10.reduce((sum, p) => sum + (p.score || 0), 0) / last10.length)
-      : 0;
-      
-    const activeSubjects = new Set(perfs.map(p => p.subjectArea)).size;
-
-    return { total, avgScore, activeSubjects };
-  }, [currentUser?.performances]);
 
   if (isLoading) {
     return (
@@ -125,7 +95,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to RetainLearn</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to AdaptiveEdCoach</h1>
               <p className="text-gray-600 mb-6">Please log in to access your dashboard</p>
               <button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg" onClick={() => window.location.href = '/login'}>
                 Login
@@ -168,13 +138,12 @@ const Dashboard = () => {
           
           {/* Gamification Status Bar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            {/* Use Memoized Component */}
-            <MemoizedXPBar 
+            <XPProgressBar 
               level={level}
               animated={true}
               onLevelUp={() => {
                 toast({
-                  title: 'Level Up! 脂',
+                  title: 'Level Up! 🎉',
                   description: `You're now a ${level.title}!`,
                 });
               }}
@@ -185,20 +154,6 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/ai-tutor')}>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Bot className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">AI Tutor</h3>
-                  <p className="text-sm text-gray-600">Get personalized help</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
@@ -234,8 +189,22 @@ const Dashboard = () => {
                   <BookOpen className="h-6 w-6 text-edu-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Learning Resources</h3>
-                  <p className="text-sm text-gray-600">Study materials</p>
+                  <h3 className="font-semibold">Reading Practice</h3>
+                  <p className="text-sm text-gray-600">Voice analysis</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-edu-light rounded-lg">
+                  <Users className="h-6 w-6 text-edu-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Classrooms</h3>
+                  <p className="text-sm text-gray-600">Join classes</p>
                 </div>
               </div>
             </CardContent>
@@ -265,18 +234,16 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column - Progress Chart & Insights */}
           <div className="xl:col-span-2 space-y-8">
-             {/* Use Memoized Component */}
-            <MemoizedProgressChart 
-              performances={recentPerformances} 
+            <ProgressChart 
+              performances={state.currentUser?.performances || []} 
               title="Academic Progress"
               description="Your performance across different subjects over time"
             />
-             {/* Use Memoized Component */}
-            <MemoizedInsights 
-              studentProfile={currentUser}
+            <PersonalizedInsights 
+              studentProfile={state.currentUser}
               timeRange="month"
             />
-            <ConfidenceScoreTracker studentProfile={currentUser} />
+            <ConfidenceScoreTracker studentProfile={state.currentUser} />
           </div>
 
           {/* Right Column - Learning Style Summary & AI Features */}
@@ -326,12 +293,12 @@ const Dashboard = () => {
         {/* Recent Submissions */}
         <div className="mt-8">
           <RecentSubmissions 
-            performances={recentPerformances} 
+            performances={state.currentUser?.performances || []} 
             limit={5}
           />
         </div>
 
-        {/* Performance Summary Cards - Using Memoized Stats */}
+        {/* Performance Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card>
             <CardHeader>
@@ -340,7 +307,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-edu-primary">
-                {stats.total}
+                {state.currentUser?.performances?.length || 0}
               </div>
             </CardContent>
           </Card>
@@ -352,7 +319,14 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-edu-primary">
-                {stats.avgScore}%
+                {state.currentUser?.performances?.length ? 
+                  Math.round(
+                    state.currentUser.performances
+                      .slice(-10)
+                      .filter(p => p.score !== undefined)
+                      .reduce((sum, p) => sum + (p.score || 0), 0) / 
+                    Math.max(1, state.currentUser.performances.slice(-10).filter(p => p.score !== undefined).length)
+                  ) : 0}%
               </div>
             </CardContent>
           </Card>
@@ -364,7 +338,8 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-edu-primary">
-                {stats.activeSubjects}
+                {state.currentUser?.performances ? 
+                  new Set(state.currentUser.performances.map(p => p.subjectArea)).size : 0}
               </div>
             </CardContent>
           </Card>
