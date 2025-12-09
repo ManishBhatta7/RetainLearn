@@ -1,11 +1,12 @@
 {
   "cli": {
-    "version": ">= 0.0.0"
+    "version": ">= 5.0.0"
   },
   "build": {
     "production": {
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradle": "7.5.1"
       }
     },
     "preview": {
