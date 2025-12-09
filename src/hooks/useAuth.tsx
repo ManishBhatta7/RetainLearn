@@ -162,11 +162,8 @@ export const useAuth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
-          data: metadata,
-          // Skip email confirmation for development
-          // Remove this in production if you want email verification
-          emailRedirectTo: undefined
+          emailRedirectTo: undefined, // Skip email confirmation for development
+          data: metadata
         }
       });
 

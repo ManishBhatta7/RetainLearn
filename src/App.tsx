@@ -35,6 +35,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const OCRPage = lazy(() => import("./pages/OCRPage"));
 const MetacognitionPage = lazy(() => import("./pages/MetacognitionPage"));
 const TeacherCompanionPage = lazy(() => import("./pages/TeacherCompanionPage"));
+const NEPAuditorPage = lazy(() => import("./pages/NEPAuditorPage"));
 const ProtectedRoute = lazy(() => import("./components/auth/ProtectedRoute"));
 
 const queryClient = new QueryClient({
@@ -169,6 +170,11 @@ const App = () => (
                   <Route path="/teacher-companion" element={
                     <ProtectedRoute requiredRole="teacher">
                       <TeacherCompanionPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/nep-auditor" element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <NEPAuditorPage />
                     </ProtectedRoute>
                   } />
                   <Route path="*" element={<NotFound />} />

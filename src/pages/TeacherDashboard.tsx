@@ -5,7 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClassAnalytics from '@/components/teacher/ClassAnalytics';
 import AssignmentManager from '@/components/teacher/AssignmentManager'; // <--- IMPORTED
-import { GraduationCap, Users, FileText, BarChart3 } from 'lucide-react';
+import { GraduationCap, Users, FileText, BarChart3, Globe } from 'lucide-react';
 
 const TeacherDashboard = () => {
   const { state } = useAppContext();
@@ -42,7 +42,7 @@ const TeacherDashboard = () => {
         </div>
 
         <Tabs defaultValue="analytics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-white border p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl bg-white border p-1 rounded-xl">
             <TabsTrigger value="analytics" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               <BarChart3 className="w-4 h-4 mr-2"/> Analytics
             </TabsTrigger>
@@ -51,6 +51,9 @@ const TeacherDashboard = () => {
             </TabsTrigger>
             <TabsTrigger value="students" className="data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
               <Users className="w-4 h-4 mr-2"/> Students
+            </TabsTrigger>
+            <TabsTrigger value="nep-audit" className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
+              <Globe className="w-4 h-4 mr-2"/> NEP Audit
             </TabsTrigger>
           </TabsList>
 
@@ -67,6 +70,19 @@ const TeacherDashboard = () => {
             <div className="p-12 text-center border rounded-lg border-dashed bg-gray-50 text-gray-400">
               <Users className="h-12 w-12 mx-auto mb-4 opacity-20" />
               <p>Student roster management coming soon.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="nep-audit" className="mt-0">
+            <div className="p-12 text-center border rounded-lg border-dashed bg-orange-50 text-orange-600">
+              <Globe className="h-12 w-12 mx-auto mb-4 opacity-40" />
+              <p className="mb-4 font-semibold">NEP 2020 Auditor - Global Standards Evaluation</p>
+              <button
+                onClick={() => navigate('/nep-auditor')}
+                className="mt-4 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold"
+              >
+                Open NEP Auditor
+              </button>
             </div>
           </TabsContent>
         </Tabs>
