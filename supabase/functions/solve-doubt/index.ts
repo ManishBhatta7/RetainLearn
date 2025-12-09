@@ -57,10 +57,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    if (!deepseekApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Lovable AI key not configured' }),
+        JSON.stringify({ error: 'DeepSeek API key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -82,14 +82,14 @@ Guidelines for your response:
 
 Please provide a detailed, educational response that helps the student understand the concept thoroughly.`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
@@ -99,14 +99,16 @@ Please provide a detailed, educational response that helps the student understan
             role: 'user',
             content: prompt
           }
-        ]
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
       }),
     });
 
     if (!aiResponse.ok) {
-      const error = await aiResponse.json();
-      console.error('Lovable AI error:', error);
-      throw new Error(`Lovable AI error: ${error.error?.message || 'Unknown error'}`);
+      const error = await aiResponse.text();
+      console.error('DeepSeek API error:', error);
+      throw new Error(`DeepSeek API error: ${error}`);
     }
 
     const aiData = await aiResponse.json();

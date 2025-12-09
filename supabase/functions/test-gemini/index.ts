@@ -16,11 +16,14 @@ serve(async (req) => {
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     
     if (!geminiApiKey) {
+      console.error('GEMINI_API_KEY not found in environment variables');
       throw new Error('Gemini API key not found in environment variables');
     }
+    
+    console.log('Testing Gemini API connection...');
 
     // Test the API key with a simple content generation request
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -41,8 +44,15 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+      const errorText = await response.text();
+      console.error('Gemini API error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        throw new Error(`Gemini API error: ${errorText}`);
+      }
+      throw new Error(`Gemini API error: ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();

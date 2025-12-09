@@ -6,6 +6,15 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
+    // Proxy Supabase Functions requests during development to avoid CORS
+    proxy: {
+      '/functions': {
+        target: 'https://gwarmogcmeehajnevbmi.supabase.co',
+        changeOrigin: true,
+        secure: true,
+        // keep path as /functions/<name>
+      }
+    },
   },
   plugins: [react()],
   resolve: {

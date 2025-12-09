@@ -4,23 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/supabase';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const GeminiTest = () => {
+const DeepSeekTest = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatting, setIsChatting] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [testResult, setTestResult] = useState<{ success: boolean; message?: string; error?: string } | null>(null);
   const [chatResult, setChatResult] = useState<{ success: boolean; response?: string; error?: string } | null>(null);
 
-  const testGemini = async () => {
+  const testDeepSeek = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('test-gemini');
+      const { data, error } = await supabase.functions.invoke('test-deepseek');
       
       if (error) throw error;
       setTestResult(data);
     } catch (error) {
-      console.error('Error testing Gemini:', error);
+      console.error('Error testing DeepSeek:', error);
       setTestResult({
         success: false,
         error: error.message
@@ -30,24 +32,23 @@ const GeminiTest = () => {
     }
   };
 
-  const chatWithGemini = async () => {
+  const chatWithDeepSeek = async () => {
     if (!prompt.trim()) return;
     
     setIsChatting(true);
     setChatResult(null);
     
     try {
-      const { data, error } = await supabase.functions.invoke('gemini-chat', {
+      const { data, error } = await supabase.functions.invoke('deepseek-chat', {
         body: { 
-          prompt: prompt.trim(),
-          systemPrompt: "You are a helpful educational AI assistant."
+          message: prompt.trim()
         }
       });
       
       if (error) throw error;
       setChatResult(data);
     } catch (error) {
-      console.error('Error chatting with Gemini:', error);
+      console.error('Error chatting with DeepSeek:', error);
       setChatResult({
         success: false,
         error: error.message
@@ -61,14 +62,14 @@ const GeminiTest = () => {
     <div className="space-y-6">
       <Card className="w-full max-w-xl mx-auto">
         <CardHeader>
-          <CardTitle>Test Gemini Flash API</CardTitle>
+          <CardTitle>Test DeepSeek API</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 
-            onClick={testGemini} 
+            onClick={testDeepSeek} 
             disabled={isLoading}
           >
-            {isLoading ? 'Testing...' : 'Test Gemini Connection'}
+            {isLoading ? 'Testing...' : 'Test DeepSeek Connection'}
           </Button>
 
           {testResult && (
@@ -86,27 +87,27 @@ const GeminiTest = () => {
 
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Chat with Gemini Flash</CardTitle>
+          <CardTitle>Chat with DeepSeek</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
-            placeholder="Ask Gemini anything..."
+            placeholder="Ask DeepSeek anything..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={3}
           />
           
           <Button 
-            onClick={chatWithGemini} 
+            onClick={chatWithDeepSeek} 
             disabled={isChatting || !prompt.trim()}
           >
-            {isChatting ? 'Generating...' : 'Send to Gemini'}
+            {isChatting ? 'Generating...' : 'Send to DeepSeek'}
           </Button>
 
           {chatResult && (
             <Alert variant={chatResult.success ? "default" : "destructive"}>
               <AlertTitle>
-                {chatResult.success ? 'Gemini Response:' : 'Error'}
+                {chatResult.success ? 'DeepSeek Response:' : 'Error'}
               </AlertTitle>
               <AlertDescription className="whitespace-pre-wrap">
                 {chatResult.success ? chatResult.response : chatResult.error}
@@ -119,4 +120,4 @@ const GeminiTest = () => {
   );
 };
 
-export default GeminiTest;
+export default DeepSeekTest;

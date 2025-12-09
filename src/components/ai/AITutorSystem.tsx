@@ -29,6 +29,8 @@ const AITutorSystem = ({ studentProfile }: AITutorProps) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<'tutor' | 'coach' | 'socratic' | 'eli5'>('tutor');
+  const [selectedModel, setSelectedModel] = useState<'gemini' | 'gpt' | 'deepseek'>('gemini');
+  const [enabledModels, setEnabledModels] = useState<string[]>(['gemini', 'gpt', 'deepseek']);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,6 +38,25 @@ const AITutorSystem = ({ studentProfile }: AITutorProps) => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  const modelToFunction = (model: string) => {
+    switch (model) {
+      case 'gemini':
+        return 'gemini-agent';
+      case 'gpt':
+        // map GPT to the available test/openai function in this workspace
+        return 'test-openai';
+      case 'deepseek':
+        // use the deployed DeepSeek chat function which includes CORS handling
+        return 'deepseek-chat';
+      default:
+        return 'gemini-agent';
+    }
+  };
+
+  const toggleEnabled = (m: string) => {
+    setEnabledModels(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+  };
 
   // === AUTO-MODE & CONTEXT HANDLER ===
   useEffect(() => {
@@ -88,29 +109,78 @@ const AITutorSystem = ({ studentProfile }: AITutorProps) => {
       }));
 
       // Inject hidden context if provided (from OCR)
-      const fullContent = hiddenContext 
-        ? `[CONTEXT: ${hiddenContext}] \n\n ${textToSend}` 
+      const fullContent = hiddenContext
+        ? `[CONTEXT: ${hiddenContext}] \n\n ${textToSend}`
         : textToSend;
 
-      const { data, error } = await supabase.functions.invoke('gemini-agent', {
-        body: {
-          messages: [...history, { role: 'user', content: fullContent }],
-          mode,
-          studentProfile,
-          language: i18n.language || 'en'
+      // Build model try order: primary then enabled fallbacks (exclude duplicates)
+      const tryOrder = [selectedModel, ...enabledModels.filter(m => m !== selectedModel)];
+
+      let finalReply: string | null = null;
+      let lastError: any = null;
+
+      for (const model of tryOrder) {
+        const fnName = modelToFunction(model);
+        try {
+          const { data, error } = await supabase.functions.invoke(fnName, {
+            body: {
+              messages: [...history, { role: 'user', content: fullContent }],
+              mode,
+              studentProfile,
+              language: i18n.language || 'en'
+            }
+          });
+
+          if (error) {
+            // Detect rate limit-like errors and try next model
+            const errMsg = (error.message || String(error)).toLowerCase();
+            lastError = error;
+            if (errMsg.includes('rate limit') || errMsg.includes('quota') || errMsg.includes('429') || errMsg.includes('over limit')) {
+              console.warn(`Model ${model} rate-limited, trying next model`);
+              continue; // try next model
+            }
+            // Non-rate errors: treat as final
+            throw error;
+          }
+
+          // Successful response
+          finalReply = data?.reply || data?.response || data?.choices?.[0]?.message?.content || null;
+          if (finalReply) {
+            const aiMsg: Message = {
+              id: (Date.now() + 1).toString(),
+              role: 'model',
+              content: finalReply,
+              timestamp: new Date()
+            };
+            setMessages(prev => [...prev, aiMsg]);
+            lastError = null;
+            break; // done
+          } else {
+            lastError = new Error('Empty response');
+            continue;
+          }
+        } catch (err) {
+          lastError = err;
+          // If error suggests rate limiting, continue; else break and show error
+          const eMsg = (err?.message || String(err)).toLowerCase();
+          if (eMsg.includes('rate limit') || eMsg.includes('quota') || eMsg.includes('429') || eMsg.includes('over limit')) {
+            console.warn(`Model ${model} rate-limited during invoke, trying next model`);
+            continue;
+          }
+          console.error('Model invocation failed:', err);
+          break;
         }
-      });
+      }
 
-      if (error) throw error;
-
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'model',
-        content: data.reply,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, aiMsg]);
+      if (!finalReply) {
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          role: 'model',
+          content: lastError ? `Failed to get response: ${lastError.message || String(lastError)}` : 'Connection error. Please try again.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      }
     } catch (error) {
       console.error('Chat Error:', error);
       const errorMsg: Message = {
@@ -149,6 +219,34 @@ const AITutorSystem = ({ studentProfile }: AITutorProps) => {
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value as any)}
+            className="rounded px-2 py-1 border bg-background text-sm"
+            aria-label="Primary model"
+          >
+            <option value="gemini">Gemini</option>
+            <option value="gpt">GPT-4</option>
+            <option value="deepseek">DeepSeek</option>
+          </select>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={enabledModels.includes('gemini')} onChange={() => toggleEnabled('gemini')} />
+              <span className="ml-1">Gemini</span>
+            </label>
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={enabledModels.includes('gpt')} onChange={() => toggleEnabled('gpt')} />
+              <span className="ml-1">GPT</span>
+            </label>
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={enabledModels.includes('deepseek')} onChange={() => toggleEnabled('deepseek')} />
+              <span className="ml-1">DeepSeek</span>
+            </label>
+          </div>
+        </div>
+
         <Button variant="ghost" size="icon" onClick={clearChat}>
           <Eraser className="w-4 h-4" />
         </Button>
