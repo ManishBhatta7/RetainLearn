@@ -30,6 +30,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "manishgamez"
+    "owner": "manishgamez",
+    "extra": {
+      "eas": {
+        "projectId": "84cea569-959a-4c40-82a4-29c7c8e1e486"
+      }
+    }
   }
 }
