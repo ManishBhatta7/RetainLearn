@@ -5,8 +5,7 @@
   "build": {
     "production": {
       "android": {
-        "buildType": "apk",
-        "gradle": "7.5.1"
+        "buildType": "apk"
       }
     },
     "preview": {
